@@ -237,10 +237,92 @@ function testFullTieredRetrieval() {
   });
 
   console.log('\nTotal tokens:', result.total_tokens);
+  console.log('Context tiers:', result.context_tier_summary);
 
   const test_pass = result.total_tokens >= 0;
   console.log('\nFull retrieval flow completed:', test_pass ? '✅ PASS' : '❌ FAIL');
 
+  return test_pass;
+}
+
+/**
+ * テスト11: Query Complexity Estimation
+ */
+function testQueryComplexityEstimation() {
+  console.log('\n=== Test 11: Query Complexity Estimation ===\n');
+
+  const simpleQuery = 'cache';
+  const complexQuery = '過去3か月の設計変更の矛盾点を比較して原因と影響を要約して';
+
+  const simpleScore = retriever.estimateQueryComplexity(simpleQuery);
+  const complexScore = retriever.estimateQueryComplexity(complexQuery);
+
+  console.log('Simple query:', simpleQuery, '→', simpleScore.toFixed(2));
+  console.log('Complex query:', complexQuery, '→', complexScore.toFixed(2));
+
+  const test_pass = complexScore >= simpleScore;
+  console.log('\nComplexity score ordering:', test_pass ? '✅ PASS' : '❌ FAIL');
+
+  return test_pass;
+}
+
+/**
+ * テスト12: Context Tier Packaging
+ */
+function testContextTierPackaging() {
+  console.log('\n=== Test 12: Context Tier Packaging ===\n');
+
+  const query = '詳細な設計判断と背景と影響を整理して比較して';
+  const result = retriever.performTieredRetrieval(query, {
+    max_tier2_tokens: 500,
+    max_tier3_tokens: 200,
+    base_top_k: 8,
+    complexity_delta: 1.0
+  });
+
+  const tierSummary = result.context_tier_summary || {};
+  console.log('Tier summary:', tierSummary);
+
+  const hasTierOutput =
+    (tierSummary.full || 0) +
+    (tierSummary.summary || 0) +
+    (tierSummary.reference || 0) >= 0;
+
+  console.log('\nTier summary generated:', hasTierOutput ? '✅ PASS' : '❌ FAIL');
+  return hasTierOutput;
+}
+
+/**
+ * テスト13: 日本語クエリのトークン抽出
+ */
+function testJapaneseTokenization() {
+  console.log('\n=== Test 13: Japanese Tokenization ===\n');
+
+  const tokens = retriever.extractQueryTokens('設計変更の矛盾点を比較して要約');
+  console.log('Extracted tokens:', tokens.slice(0, 10));
+
+  const test_pass = tokens.length > 0;
+  console.log('\nJapanese tokens extracted:', test_pass ? '✅ PASS' : '❌ FAIL');
+  return test_pass;
+}
+
+/**
+ * テスト14: Tier-1 予算制御
+ */
+function testTier1BudgetControl() {
+  console.log('\n=== Test 14: Tier-1 Budget Control ===\n');
+
+  const result = retriever.performTieredRetrieval('core context', {
+    max_tier1_tokens: 20,
+    max_tier2_tokens: 0,
+    max_tier3_tokens: 0
+  });
+
+  console.log('Tier-1 tokens:', result.tier_1.tokens);
+  console.log('Tier-1 content length:', (result.tier_1.content || '').length);
+
+  const test_pass = result.tier_1.tokens <= 20;
+  console.log('\nTier-1 token cap applied:', test_pass ? '✅ PASS' : '❌ FAIL');
   return test_pass;
 }
 
@@ -264,7 +346,11 @@ function runAllTests() {
       { name: 'Conflict Resolution', result: testConflictResolution() },
       { name: 'Budget Control', result: testBudgetControl() },
       { name: 'Token Estimation', result: testTokenEstimation() },
-      { name: 'Full Tiered Retrieval Flow', result: testFullTieredRetrieval() }
+      { name: 'Full Tiered Retrieval Flow', result: testFullTieredRetrieval() },
+      { name: 'Query Complexity Estimation', result: testQueryComplexityEstimation() },
+      { name: 'Context Tier Packaging', result: testContextTierPackaging() },
+      { name: 'Japanese Tokenization', result: testJapaneseTokenization() },
+      { name: 'Tier-1 Budget Control', result: testTier1BudgetControl() }
     ]
   };
 

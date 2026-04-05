@@ -4,7 +4,7 @@ param(
 
   [string[]]$ScriptArgs = @(),
 
-  [ValidateSet('allow', 'context', 'silent')]
+  [ValidateSet('allow', 'deny', 'context', 'silent')]
   [string]$FallbackMode = 'silent'
 )
 
@@ -13,6 +13,11 @@ function Write-Fallback {
 
   if ($Mode -eq 'allow') {
     Write-Output '{"permissionDecision":"allow"}'
+    return
+  }
+
+  if ($Mode -eq 'deny') {
+    Write-Output '{"permissionDecision":"deny","permissionDecisionReason":"HOOK_RUNTIME_UNAVAILABLE: Node.js is not available; hook script was skipped."}'
     return
   }
 
@@ -36,7 +41,13 @@ try {
   } else {
     $stdinPayload | & node $Script @ScriptArgs
   }
-  exit $LASTEXITCODE
+
+  if ($LASTEXITCODE -ne 0) {
+    Write-Fallback -Mode $FallbackMode
+    exit 0
+  }
+
+  exit 0
 } catch {
   Write-Fallback -Mode $FallbackMode
   exit 0

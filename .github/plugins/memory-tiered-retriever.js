@@ -10,13 +10,71 @@
 
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 
 const MEMORY_DIR = path.join(__dirname, '..', '..', 'memory');
 const TIER_1_FILE = path.join(MEMORY_DIR, 'core.md');
 const TIER_2_DIR = path.join(MEMORY_DIR, 'patterns');
 const TIER_3_DIR = path.join(MEMORY_DIR, 'episodes');
 const MEMORY_INDEX = path.join(MEMORY_DIR, 'index.json');
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function readFileSafe(filePath, fallback = '') {
+  try {
+    return fs.readFileSync(filePath, 'utf8');
+  } catch {
+    return fallback;
+  }
+}
+
+function loadMemoryIndex() {
+  const defaultIndex = { entries: {}, entry_template: {} };
+  if (!fs.existsSync(MEMORY_INDEX)) {
+    return defaultIndex;
+  }
+
+  try {
+    const parsed = JSON.parse(fs.readFileSync(MEMORY_INDEX, 'utf8'));
+    if (!parsed || typeof parsed !== 'object') {
+      return defaultIndex;
+    }
+    return {
+      entries: parsed.entries || {},
+      entry_template: parsed.entry_template || {}
+    };
+  } catch {
+    return defaultIndex;
+  }
+}
+
+function writeMemoryIndex(index) {
+  const current = loadMemoryIndex();
+  const persisted = (() => {
+    if (!fs.existsSync(MEMORY_INDEX)) return {};
+    try {
+      return JSON.parse(fs.readFileSync(MEMORY_INDEX, 'utf8'));
+    } catch {
+      return {};
+    }
+  })();
+
+  const merged = {
+    version: '1.0',
+    updated_at: new Date().toISOString(),
+    entries: index.entries || current.entries || {},
+    entry_template: index.entry_template || current.entry_template || {},
+    policy: persisted.policy || {
+      tier_1: 'core.md',
+      tier_2: 'memory/patterns',
+      tier_3: 'memory/episodes',
+      tier_4: 'memory/archive'
+    }
+  };
+
+  fs.writeFileSync(MEMORY_INDEX, JSON.stringify(merged, null, 2), 'utf8');
+}
 
 /**
  * Tier-1 Core を読み込み
@@ -47,9 +105,147 @@ function loadTier1Core() {
  * @returns {number} 推定トークン数
  */
 function estimateTokens(text) {
-  // 単純な推定: 単語数の 1.3 倍（GPT-3 tokenizer 近似）
-  const word_count = text.split(/\s+/).length;
-  return Math.ceil(word_count * 1.3);
+  if (!text || typeof text !== 'string') return 0;
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  if (!normalized) return 0;
+
+  const latinWords = (normalized.match(/[A-Za-z0-9_]+/g) || []).length;
+  const cjkChars = (normalized.match(/[\u3040-\u30ff\u3400-\u9fff]/g) || []).length;
+
+  // CJK を含む文でも過小評価しないよう、文字種に応じて重みを分ける
+  return Math.max(1, Math.ceil(latinWords * 1.3 + cjkChars * 0.8));
+}
+
+function extractQueryTokens(query, options = {}) {
+  const minLatinLength = options.minLatinLength || 3;
+  const cjkNgramMin = options.cjkNgramMin || 2;
+  const cjkNgramMax = options.cjkNgramMax || 3;
+
+  const normalized = (query || '').toLowerCase();
+  const tokens = new Set();
+
+  for (const token of normalized.split(/\s+/).filter(Boolean)) {
+    if (/[a-z0-9_]/.test(token) && token.length >= minLatinLength) {
+      tokens.add(token);
+    }
+  }
+
+  const cjkRuns = normalized.match(/[\u3040-\u30ff\u3400-\u9fff]+/g) || [];
+  for (const run of cjkRuns) {
+    if (run.length <= 3) {
+      tokens.add(run);
+      continue;
+    }
+
+    for (let n = cjkNgramMin; n <= cjkNgramMax; n++) {
+      for (let i = 0; i <= run.length - n; i++) {
+        tokens.add(run.slice(i, i + n));
+      }
+    }
+  }
+
+  return Array.from(tokens);
+}
+
+function tokenizeForSemantic(text) {
+  const normalized = (text || '').toLowerCase();
+  const tokens = new Set();
+
+  for (const token of normalized.match(/[a-z0-9_]+/g) || []) {
+    if (token.length >= 2) {
+      tokens.add(token);
+    }
+  }
+
+  const cjkRuns = normalized.match(/[\u3040-\u30ff\u3400-\u9fff]+/g) || [];
+  for (const run of cjkRuns) {
+    if (run.length <= 2) {
+      tokens.add(run);
+      continue;
+    }
+
+    for (let i = 0; i < run.length - 1; i++) {
+      tokens.add(run.slice(i, i + 2));
+    }
+  }
+
+  return tokens;
+}
+
+function trimTextToTokenBudget(text, maxTokens) {
+  if (!text || maxTokens <= 0) return '';
+  const originalTokens = estimateTokens(text);
+  if (originalTokens <= maxTokens) return text;
+
+  let candidateLength = Math.max(80, Math.floor(text.length * (maxTokens / originalTokens)));
+  let candidate = `${text.slice(0, candidateLength)}\n...[truncated]`;
+
+  while (estimateTokens(candidate) > maxTokens && candidateLength > 40) {
+    candidateLength = Math.floor(candidateLength * 0.9);
+    candidate = `${text.slice(0, candidateLength)}\n...[truncated]`;
+  }
+
+  return candidate;
+}
+
+function estimateQueryComplexity(query) {
+  const q = (query || '').trim();
+  if (!q) return 0;
+
+  const terms = q.split(/\s+/).filter(Boolean);
+  const uniqueTerms = new Set(terms.map(t => t.toLowerCase())).size;
+  const hasTimeIntent = /(before|after|during|between|\d{4}|今日|昨日|明日|先週|今月|期限|日時)/i.test(q);
+  const hasLogicalIntent = /(and|or|not|except|比較|矛盾|関連|要約|因果|影響)/i.test(q);
+  const longQueryBoost = q.length > 120 ? 1 : 0;
+
+  const base = clamp(uniqueTerms / 20, 0, 1);
+  const intentBoost = (hasTimeIntent ? 0.2 : 0) + (hasLogicalIntent ? 0.2 : 0) + (longQueryBoost ? 0.2 : 0);
+  return clamp(base + intentBoost, 0, 1);
+}
+
+function buildContextPacket(candidate, remainingTokens, options = {}) {
+  const fullThreshold = options.fullThreshold || 0.8;
+  const score = options.score || 0;
+  const id = candidate.id || candidate.task_id || candidate.file_name || 'unknown';
+  const raw = candidate.content || candidate.summary || '';
+
+  if (!raw) {
+    return {
+      ...candidate,
+      context_tier: 'reference',
+      context_payload: `[REF] ${id}`,
+      context_tokens: estimateTokens(`[REF] ${id}`)
+    };
+  }
+
+  if (score >= fullThreshold && remainingTokens >= 500) {
+    const tokens = estimateTokens(raw);
+    return {
+      ...candidate,
+      context_tier: 'full',
+      context_payload: raw,
+      context_tokens: tokens
+    };
+  }
+
+  if (remainingTokens >= 100) {
+    const summary = raw.slice(0, 500);
+    const tokens = estimateTokens(summary);
+    return {
+      ...candidate,
+      context_tier: 'summary',
+      context_payload: summary,
+      context_tokens: tokens
+    };
+  }
+
+  const ref = `[REF] ${id}: ${raw.slice(0, 120).replace(/\n/g, ' ')}`;
+  return {
+    ...candidate,
+    context_tier: 'reference',
+    context_payload: ref,
+    context_tokens: estimateTokens(ref)
+  };
 }
 
 /**
@@ -64,17 +260,28 @@ function loadTier2Patterns() {
     };
   }
 
+  const memoryIndex = loadMemoryIndex();
   const files = fs.readdirSync(TIER_2_DIR).filter(f => f.endsWith('.md'));
   const patterns = files.map((file) => {
     const filePath = path.join(TIER_2_DIR, file);
     const content = fs.readFileSync(filePath, 'utf8');
+    const id = file.replace(/\.md$/i, '');
+    const indexMeta = memoryIndex.entries[id] || {};
     return {
-      id: file.replace(/\.md$/i, ''),
+      id,
       name: file,
       content,
       created_at: fs.statSync(filePath).mtime.toISOString(),
-      specificity: 1.0,
-      access_count: 0
+      specificity: indexMeta.specificity || 1.0,
+      access_count: indexMeta.access_count || 0,
+      confidence: indexMeta.confidence || 0.7,
+      provenance: indexMeta.provenance || {
+        source: 'memory/patterns',
+        timestamp: null,
+        derivation: null
+      },
+      derives_from: indexMeta.derives_from || [],
+      superseded_by: indexMeta.superseded_by || null
     };
   });
 
@@ -99,13 +306,31 @@ function loadTier3Episodes() {
     };
   }
 
+  const memoryIndex = loadMemoryIndex();
   const files = fs.readdirSync(TIER_3_DIR).filter(f => f.endsWith('.md'));
-  const episodes = files.map(file => ({
-    file_name: file,
-    task_id: file.replace(/\.md$/, ''),
-    file_path: path.join(TIER_3_DIR, file),
-    created_at: fs.statSync(path.join(TIER_3_DIR, file)).birthtime.toISOString()
-  }));
+  const episodes = files.map(file => {
+    const task_id = file.replace(/\.md$/, '');
+    const file_path = path.join(TIER_3_DIR, file);
+    const content = readFileSafe(file_path, '');
+    const indexMeta = memoryIndex.entries[task_id] || {};
+    return {
+      file_name: file,
+      task_id,
+      file_path,
+      created_at: fs.statSync(file_path).birthtime.toISOString(),
+      content,
+      specificity: indexMeta.specificity || 1.0,
+      access_count: indexMeta.access_count || 0,
+      confidence: indexMeta.confidence || 0.7,
+      provenance: indexMeta.provenance || {
+        source: 'memory/episodes',
+        timestamp: null,
+        derivation: null
+      },
+      derives_from: indexMeta.derives_from || [],
+      superseded_by: indexMeta.superseded_by || null
+    };
+  });
 
   return {
     episodes: episodes,
@@ -126,7 +351,8 @@ function scoreByKeywords(text, keywords) {
   let matched = 0;
 
   for (const keyword of keywords) {
-    if (text_lower.includes(keyword.toLowerCase())) {
+    const keywordLower = keyword.toLowerCase();
+    if (text_lower.includes(keywordLower)) {
       matched++;
     }
   }
@@ -141,9 +367,8 @@ function scoreByKeywords(text, keywords) {
  * @returns {number} スコア (0.0～1.0)
  */
 function scoreBySemanticSimilarity(text, query) {
-  // 簡易版: 単語の重複度を計算
-  const text_words = new Set(text.toLowerCase().split(/\s+/));
-  const query_words = new Set(query.toLowerCase().split(/\s+/));
+  const text_words = tokenizeForSemantic(text);
+  const query_words = tokenizeForSemantic(query);
 
   const intersection = Array.from(query_words).filter(w => text_words.has(w)).length;
   const union = new Set([...text_words, ...query_words]).size;
@@ -164,10 +389,7 @@ function hybridRetrieval(patterns, query, options = {}) {
   const top_k = options.top_k || 5;
 
   // キーワード抽出（query からの主要単語）
-  const keywords = query
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(w => w.length > 3); // 3 文字以上のみ
+  const keywords = extractQueryTokens(query, { minLatinLength: 3 });
 
   // 各パターンをスコリング
   const scored_patterns = patterns.map(pattern => {
@@ -241,10 +463,10 @@ function applyBudgetControl(candidates, max_tokens) {
   const selected = [];
 
   for (const candidate of candidates) {
-    const tokens = estimateTokens(candidate.content || candidate.name || '');
+    const tokens = estimateTokens(candidate.context_payload || candidate.content || candidate.name || '');
     if (total_tokens + tokens <= max_tokens) {
       total_tokens += tokens;
-      selected.push(candidate);
+      selected.push({ ...candidate, context_tokens: tokens });
     } else {
       break; // 予算オーバー時は以降を除外
     }
@@ -263,21 +485,39 @@ function performTieredRetrieval(query, config = {}) {
   const max_tier1_tokens = config.max_tier1_tokens || 2000;
   const max_tier2_tokens = config.max_tier2_tokens || 1500;
   const max_tier3_tokens = config.max_tier3_tokens || 500;
+  const base_top_k = config.base_top_k || 8;
+  const complexity_delta = config.complexity_delta || 0.8;
   const tier2_pattern_weight = config.tier2_pattern_weight || 0.6; // known_pattern
   const tier2_new_capability_weight = config.tier2_new_capability_weight || 0.4; // new_capability
+  const complexity_score = estimateQueryComplexity(query);
+  const dynamic_top_k = clamp(Math.round(base_top_k * (1 + complexity_delta * complexity_score)), 3, 20);
 
   const retrieval_plan = {
     timestamp: new Date().toISOString(),
     query: query,
+    complexity: {
+      score: complexity_score,
+      base_top_k,
+      dynamic_top_k
+    },
     stages: []
   };
 
   // Stage 1: Tier-1 Core を読み込み（常時）
-  const tier1 = loadTier1Core();
+  const tier1Raw = loadTier1Core();
+  const tier1Content = trimTextToTokenBudget(tier1Raw.content || '', max_tier1_tokens);
+  const tier1 = {
+    ...tier1Raw,
+    content: tier1Content,
+    tokens: estimateTokens(tier1Content),
+    truncated: estimateTokens(tier1Content) < (tier1Raw.tokens || 0)
+  };
   retrieval_plan.stages.push({
     stage: 'Tier-1 Core',
     status: 'loaded',
-    tokens: tier1.tokens
+    tokens: tier1.tokens,
+    truncated: !!tier1.truncated,
+    original_tokens: tier1Raw.tokens || 0
   });
 
   // Stage 2: Tier-2 Patterns
@@ -289,14 +529,21 @@ function performTieredRetrieval(query, config = {}) {
     const scored = hybridRetrieval(tier2_data.patterns, query, {
       keyword_weight: tier2_pattern_weight,
       semantic_weight: tier2_new_capability_weight,
-      top_k: 10
+      top_k: dynamic_top_k
     });
 
     // 競合解決
     const resolved = resolveConflicts(scored);
 
+    let tier2Remaining = max_tier2_tokens;
+    const tieredPackets = resolved.map((p) => {
+      const packet = buildContextPacket(p, tier2Remaining, { score: p.scores?.hybrid || 0 });
+      tier2Remaining -= packet.context_tokens;
+      return packet;
+    });
+
     // 予算制御
-    tier2_selected = applyBudgetControl(resolved, max_tier2_tokens);
+    tier2_selected = applyBudgetControl(tieredPackets, max_tier2_tokens);
   }
 
   retrieval_plan.stages.push({
@@ -304,7 +551,7 @@ function performTieredRetrieval(query, config = {}) {
     status: 'retrieved',
     candidates_total: tier2_data.patterns.length,
     candidates_selected: tier2_selected.length,
-    tokens: tier2_selected.reduce((sum, p) => sum + (p.scores?.tokens || 0), 0)
+    tokens: tier2_selected.reduce((sum, p) => sum + (p.context_tokens || 0), 0)
   });
 
   // Stage 3: Tier-3 Episodes
@@ -312,14 +559,21 @@ function performTieredRetrieval(query, config = {}) {
   let tier3_selected = [];
 
   if (!tier3_data.directory_not_found) {
+    const episodeKeywords = extractQueryTokens(query, { minLatinLength: 2 });
     // 関連 episode を検索
     const scored = tier3_data.episodes.map(ep => ({
       ...ep,
-      score: scoreByKeywords(ep.task_id, query.split(/\s+/))
+      score: scoreByKeywords(`${ep.task_id} ${ep.content}`, episodeKeywords)
     }));
 
     const resolved = resolveConflicts(scored);
-    tier3_selected = applyBudgetControl(resolved, max_tier3_tokens);
+    let tier3Remaining = max_tier3_tokens;
+    const tieredPackets = resolved.map((ep) => {
+      const packet = buildContextPacket(ep, tier3Remaining, { score: ep.score || 0 });
+      tier3Remaining -= packet.context_tokens;
+      return packet;
+    });
+    tier3_selected = applyBudgetControl(tieredPackets, max_tier3_tokens);
   }
 
   retrieval_plan.stages.push({
@@ -327,13 +581,49 @@ function performTieredRetrieval(query, config = {}) {
     status: 'retrieved',
     candidates_total: tier3_data.total_episodes || 0,
     candidates_selected: tier3_selected.length,
-    tokens: tier3_selected.reduce((sum, p) => sum + estimateTokens(fs.readFileSync(p.file_path, 'utf8')), 0)
+    tokens: tier3_selected.reduce((sum, p) => sum + (p.context_tokens || 0), 0)
   });
 
   // 総トークン数計算
   const total_tokens = tier1.tokens +
-    tier2_selected.reduce((sum, p) => sum + (p.scores?.tokens || 0), 0) +
-    tier3_selected.reduce((sum, p) => sum + estimateTokens(fs.readFileSync(p.file_path, 'utf8')), 0);
+    tier2_selected.reduce((sum, p) => sum + (p.context_tokens || 0), 0) +
+    tier3_selected.reduce((sum, p) => sum + (p.context_tokens || 0), 0);
+
+  const tierSummary = {
+    full: 0,
+    summary: 0,
+    reference: 0
+  };
+
+  for (const item of [...tier2_selected, ...tier3_selected]) {
+    if (item.context_tier && tierSummary[item.context_tier] !== undefined) {
+      tierSummary[item.context_tier] += 1;
+    }
+  }
+
+  // Batch index updates: collect all items then write once
+  const indexUpdates = {};
+  for (const pattern of tier2_selected) {
+    indexUpdates[pattern.id || pattern.name || 'unknown-pattern'] = {
+      confidence: pattern.confidence,
+      provenance: pattern.provenance,
+      derives_from: pattern.derives_from,
+      superseded_by: pattern.superseded_by,
+      retrieval_tier: pattern.context_tier || 'reference'
+    };
+  }
+  for (const episode of tier3_selected) {
+    indexUpdates[episode.task_id || episode.file_name || 'unknown-episode'] = {
+      confidence: episode.confidence,
+      provenance: episode.provenance,
+      derives_from: episode.derives_from,
+      superseded_by: episode.superseded_by,
+      retrieval_tier: episode.context_tier || 'reference'
+    };
+  }
+  if (Object.keys(indexUpdates).length > 0) {
+    batchUpdateMemoryIndex(indexUpdates);
+  }
 
   return {
     tier_1: {
@@ -348,35 +638,85 @@ function performTieredRetrieval(query, config = {}) {
       selected: tier3_selected,
       count: tier3_selected.length
     },
+    context_tier_summary: tierSummary,
     total_tokens: total_tokens,
     retrieval_plan: retrieval_plan
   };
 }
 
 /**
- * Memory Index を更新（access_count / specificity）
- * @param {string} resource_id - リソース ID
+ * Memory Index の1件を in-memory の index オブジェクトへ適用（ファイル書き込みなし）
+ * @param {object} index - loadMemoryIndex() で得た index オブジェクト（破壊的変更）
+ * @param {string} resource_id
+ * @param {object} metadata
  */
-function updateMemoryIndex(resource_id) {
-  let index = { entries: {} };
-
-  if (fs.existsSync(MEMORY_INDEX)) {
-    index = JSON.parse(fs.readFileSync(MEMORY_INDEX, 'utf8'));
-  }
+function applyIndexEntry(index, resource_id, metadata = {}) {
+  const template = index.entry_template || {};
 
   if (!index.entries[resource_id]) {
     index.entries[resource_id] = {
-      resource_id: resource_id,
+      ...template,
+      resource_id,
       access_count: 0,
       last_accessed_at: null,
-      specificity: 1.0
+      specificity: 1.0,
+      confidence: 0.7,
+      provenance: {
+        source: 'unknown',
+        timestamp: null,
+        derivation: null
+      },
+      derives_from: [],
+      superseded_by: null,
+      retrieval_tier: 'reference'
     };
   }
 
   index.entries[resource_id].access_count++;
   index.entries[resource_id].last_accessed_at = new Date().toISOString();
+  if (typeof metadata.specificity === 'number') {
+    index.entries[resource_id].specificity = metadata.specificity;
+  }
+  if (typeof metadata.confidence === 'number') {
+    index.entries[resource_id].confidence = clamp(metadata.confidence, 0, 1);
+  }
+  if (metadata.provenance && typeof metadata.provenance === 'object') {
+    index.entries[resource_id].provenance = {
+      ...index.entries[resource_id].provenance,
+      ...metadata.provenance
+    };
+  }
+  if (Array.isArray(metadata.derives_from)) {
+    index.entries[resource_id].derives_from = metadata.derives_from;
+  }
+  if (typeof metadata.superseded_by === 'string' || metadata.superseded_by === null) {
+    index.entries[resource_id].superseded_by = metadata.superseded_by;
+  }
+  if (typeof metadata.retrieval_tier === 'string') {
+    index.entries[resource_id].retrieval_tier = metadata.retrieval_tier;
+  }
+}
 
-  fs.writeFileSync(MEMORY_INDEX, JSON.stringify(index, null, 2), 'utf8');
+/**
+ * Memory Index を更新（access_count / specificity）- 1件ずつ即時書き込み
+ * @param {string} resource_id - リソース ID
+ */
+function updateMemoryIndex(resource_id, metadata = {}) {
+  const index = loadMemoryIndex();
+  applyIndexEntry(index, resource_id, metadata);
+  writeMemoryIndex(index);
+}
+
+/**
+ * Memory Index を複数件まとめて更新（fileI/O は1回のみ）
+ * @param {Object.<string, object>} updates - { resource_id: metadata } のマップ
+ */
+function batchUpdateMemoryIndex(updates) {
+  const index = loadMemoryIndex();
+  for (const [resource_id, metadata] of Object.entries(updates)) {
+    applyIndexEntry(index, resource_id, metadata);
+  }
+  writeMemoryIndex(index);
 }
 
 // エクスポート
@@ -391,5 +731,8 @@ module.exports = {
   applyBudgetControl,
   performTieredRetrieval,
   updateMemoryIndex,
-  estimateTokens
+  batchUpdateMemoryIndex,
+  estimateTokens,
+  estimateQueryComplexity,
+  extractQueryTokens
 };

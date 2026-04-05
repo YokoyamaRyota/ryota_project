@@ -34,19 +34,19 @@
   "current_workflow": {
     "phase": "requirement_definition",
     "sub_phase": null,
-    "status": "final_test_completed",
+    "status": "in_progress",
     "decision_state": null,
     "decision_id": null,
     "decision_started_at": null,
     "reminder_sent_at": null,
     "decision_suspended_at": null,
     "suspended_reason": null,
-    "rollback_target_phase": "requirement_definition",
-    "uat_pending": true
+    "rollback_target_phase": null,
+    "uat_pending": false
   },
   "execution_tracking": {
     "phase_start_timestamp": null,
-    "phase_end_timestamp": "2026-04-05T05:49:41Z",
+    "phase_end_timestamp": null,
     "retries_count": 0,
     "timeout_count": 0,
     "drift_corrections": 0,
@@ -66,6 +66,16 @@
     "tier3_retrieval_count": 0,
     "episode_write_pending": false,
     "distillation_pending": false
+  },
+  "research_state": {
+    "required": false,
+    "internal_exploration_done": false,
+    "primary_source_verification_done": false,
+    "browser_observation_done": false,
+    "browser_unavailable": false,
+    "remaining_uncertainty": null,
+    "last_report": null,
+    "last_updated": null
   },
   "circuit_breaker": {
     "state": "closed",
@@ -94,15 +104,6 @@
     "critical_event_count": 0
   },
   "artifact_tracking": {
-    "marked_for_deletion": [
-      "specification",
-      "delivery_planning",
-      "design",
-      "implementation",
-      "fast_review",
-      "deep_review",
-      "uat",
-      "complete"
-    ]
+    "marked_for_deletion": []
   }
 }

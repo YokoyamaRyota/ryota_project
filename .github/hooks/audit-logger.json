@@ -1,4 +1,4 @@
-{
+﻿{
   "hooks": {
     "SessionStart": [
       {
@@ -24,6 +24,22 @@
         "timeout": 5
       }
     ],
+    "SubagentStart": [
+      {
+        "type": "command",
+        "command": "node .github/hooks/scripts/log-event.js SubagentStart",
+        "windows": "powershell -NoProfile -ExecutionPolicy Bypass -File .github/hooks/scripts/run-node-hook.ps1 -Script .github/hooks/scripts/log-event.js -ScriptArgs SubagentStart -FallbackMode silent",
+        "timeout": 5
+      }
+    ],
+    "SubagentStop": [
+      {
+        "type": "command",
+        "command": "node .github/hooks/scripts/log-event.js SubagentStop",
+        "windows": "powershell -NoProfile -ExecutionPolicy Bypass -File .github/hooks/scripts/run-node-hook.ps1 -Script .github/hooks/scripts/log-event.js -ScriptArgs SubagentStop -FallbackMode silent",
+        "timeout": 5
+      }
+    ],
     "Stop": [
       {
         "type": "command",
@@ -34,3 +50,5 @@
     ]
   }
 }
+
+

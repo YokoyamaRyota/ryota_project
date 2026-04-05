@@ -11,6 +11,7 @@ mode: ask
 - last_phase
 - blocked_reason
 - remaining_steps
+- research_state
 
 出力形式:
 
@@ -19,6 +20,7 @@ mode: ask
   "task_id": "",
   "resume_phase": "",
   "required_artifacts": [],
-  "first_action": ""
+  "first_action": "",
+  "research_resume_action": ""
 }
 ```

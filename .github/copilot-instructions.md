@@ -408,4 +408,22 @@ Apply these defaults in chat and agent mode:
 - Do not add host-specific frontmatter or VS Code-only metadata to `skills/`.
 - Keep research, browser, and external-tool usage opt-in.
 
+### 14.1 Delegated Research Policy
+
+- For each task, the coordinator must decide: internal exploration, primary-source verification, and browser observation (true/false each).
+- If any item is true, run the corresponding research step before final implementation/review output.
+- When a delegated task needs local evidence gathering, use `explorer` first.
+- When a delegated task needs primary-source external verification, use `docs-researcher`.
+- When a delegated task needs real UI observation, run browser-enabled QA workflow when browser capability is enabled.
+- If browser capability is not enabled, run non-browser fallback research and report `browser_unavailable` with remaining uncertainty.
+- Before external research starts, define and preserve: research goal, scope boundary, acceptance checks, and stop conditions.
+- Every research response must include: evidence source, confidence level, and unknowns.
+
+### 14.2 Instruction Reliability Rules
+
+- Do not rely on cross-file indirection for critical rules (for example, "read AGENTS.md" only). Put critical constraints directly in applicable instruction files.
+- Keep review-critical constraints directly in `.github/copilot-instructions.md` and `.github/instructions/*.instructions.md` so repository review contexts can consume them without external link chasing.
+- If a task includes research requirements, record and update `task_contract.research_requirements` and `state.research_state` before completion.
+- If `needs_browser_observation=true` and browser is unavailable, set `browser_unavailable=true` and include `remaining_uncertainty` in the report.
+
 When a task maps to an existing skill, load that skill before improvising a new workflow.

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-05T08:41:15.599Z",
+  "timestamp": "2026-04-05T10:12:39.424Z",
   "hooks": {
     "audit-logger": {
       "tests": [
@@ -7,31 +7,31 @@
           "test_name": "SessionStart Initialization",
           "passed": true,
           "details": "Logger initialized",
-          "timestamp": "2026-04-05T08:41:15.607Z"
+          "timestamp": "2026-04-05T10:12:39.434Z"
         },
         {
           "test_name": "Event Logging",
           "passed": true,
-          "details": "Event logged: 7bae23b2-9a98-42da-8154-c2d4b1342594",
-          "timestamp": "2026-04-05T08:41:15.608Z"
+          "details": "Event logged: 96eb8aec-861c-4621-9d84-90346a5b61fc",
+          "timestamp": "2026-04-05T10:12:39.435Z"
         },
         {
           "test_name": "Event Query",
           "passed": true,
-          "details": "Found 11 events",
-          "timestamp": "2026-04-05T08:41:15.610Z"
+          "details": "Found 14 events",
+          "timestamp": "2026-04-05T10:12:39.438Z"
         },
         {
           "test_name": "Log Integrity",
           "passed": true,
-          "details": "Valid: true, Total events: 922",
-          "timestamp": "2026-04-05T08:41:15.613Z"
+          "details": "Valid: true, Total events: 1573",
+          "timestamp": "2026-04-05T10:12:39.443Z"
         },
         {
           "test_name": "System State Reconstruction",
           "passed": true,
-          "details": "Events: 922",
-          "timestamp": "2026-04-05T08:41:15.615Z"
+          "details": "Events: 1573",
+          "timestamp": "2026-04-05T10:12:39.446Z"
         }
       ]
     },
@@ -41,31 +41,31 @@
           "test_name": "SessionStart Check",
           "passed": true,
           "details": "Budget status: 52.5%",
-          "timestamp": "2026-04-05T08:41:15.616Z"
+          "timestamp": "2026-04-05T10:12:39.447Z"
         },
         {
           "test_name": "Budget State Loading",
           "passed": true,
           "details": "Allocated: 20",
-          "timestamp": "2026-04-05T08:41:15.616Z"
+          "timestamp": "2026-04-05T10:12:39.447Z"
         },
         {
           "test_name": "Predicted Cost Calculation",
           "passed": true,
           "details": "Cost: 0",
-          "timestamp": "2026-04-05T08:41:15.616Z"
+          "timestamp": "2026-04-05T10:12:39.447Z"
         },
         {
           "test_name": "Alert Threshold Check",
           "passed": true,
           "details": "Alert triggered: false",
-          "timestamp": "2026-04-05T08:41:15.616Z"
+          "timestamp": "2026-04-05T10:12:39.447Z"
         },
         {
           "test_name": "Degradation Policy",
           "passed": true,
           "details": "Steps applied: 0",
-          "timestamp": "2026-04-05T08:41:15.616Z"
+          "timestamp": "2026-04-05T10:12:39.447Z"
         }
       ]
     },
@@ -73,21 +73,27 @@
       "tests": [
         {
           "test_name": "File Existence Check",
-          "passed": false,
-          "details": "system-specification.md exists: false",
-          "timestamp": "2026-04-05T08:41:15.616Z"
+          "passed": true,
+          "details": "system-specification.md exists: true",
+          "timestamp": "2026-04-05T10:12:39.448Z"
+        },
+        {
+          "test_name": "Sync Status Extraction",
+          "passed": true,
+          "details": "Sync status: not_found",
+          "timestamp": "2026-04-05T10:12:39.448Z"
         },
         {
           "test_name": "Must-Have Fields Check",
-          "passed": false,
-          "details": "Missing: [## 2. 機能要件, ## 3. 非機能要件, ## 4. 運用要件]",
-          "timestamp": "2026-04-05T08:41:15.616Z"
+          "passed": true,
+          "details": "Missing: []",
+          "timestamp": "2026-04-05T10:12:39.448Z"
         },
         {
           "test_name": "Artifact Gate Check",
-          "passed": false,
-          "details": "Issues: 2",
-          "timestamp": "2026-04-05T08:41:15.616Z"
+          "passed": true,
+          "details": "Issues: 0",
+          "timestamp": "2026-04-05T10:12:39.449Z"
         }
       ]
     },
@@ -97,31 +103,31 @@
           "test_name": "Valid Transition Validation",
           "passed": true,
           "details": "Transition is valid",
-          "timestamp": "2026-04-05T08:41:15.616Z"
+          "timestamp": "2026-04-05T10:12:39.449Z"
         },
         {
           "test_name": "Invalid Transition Detection",
           "passed": true,
           "details": "INVALID_TRANSITION: \"implementation\" -> \"design\" is not allowed",
-          "timestamp": "2026-04-05T08:41:15.616Z"
+          "timestamp": "2026-04-05T10:12:39.449Z"
         },
         {
           "test_name": "Backtrack Detection",
           "passed": true,
           "details": "Jump levels: 2",
-          "timestamp": "2026-04-05T08:41:15.616Z"
+          "timestamp": "2026-04-05T10:12:39.449Z"
         },
         {
           "test_name": "Skip Detection",
           "passed": true,
           "details": "Skipped phases: implementation, fast_review, deep_review",
-          "timestamp": "2026-04-05T08:41:15.616Z"
+          "timestamp": "2026-04-05T10:12:39.449Z"
         },
         {
           "test_name": "Phase Transition Guard Check",
           "passed": true,
           "details": "Approval: false, Issues: 1",
-          "timestamp": "2026-04-05T08:41:15.617Z"
+          "timestamp": "2026-04-05T10:12:39.450Z"
         }
       ]
     },
@@ -131,31 +137,31 @@
           "test_name": "Approved Path",
           "passed": true,
           "details": "Status: approved",
-          "timestamp": "2026-04-05T08:41:15.617Z"
+          "timestamp": "2026-04-05T10:12:39.450Z"
         },
         {
           "test_name": "Phase Priority Check",
           "passed": true,
           "details": "Deny code: PHASE_GATE_FAIL",
-          "timestamp": "2026-04-05T08:41:15.618Z"
+          "timestamp": "2026-04-05T10:12:39.451Z"
         },
         {
           "test_name": "Change Request Approval Check",
           "passed": true,
           "details": "Deny code: CHANGE_UNAPPROVED",
-          "timestamp": "2026-04-05T08:41:15.618Z"
+          "timestamp": "2026-04-05T10:12:39.451Z"
         },
         {
           "test_name": "Traceability Check",
           "passed": true,
           "details": "Deny code: TRACEABILITY_MISSING",
-          "timestamp": "2026-04-05T08:41:15.619Z"
+          "timestamp": "2026-04-05T10:12:39.451Z"
         }
       ]
     }
   },
-  "overall_status": "failed",
-  "total_tests": 22,
-  "passed_tests": 19,
-  "failed_tests": 3
+  "overall_status": "passed",
+  "total_tests": 23,
+  "passed_tests": 23,
+  "failed_tests": 0
 }

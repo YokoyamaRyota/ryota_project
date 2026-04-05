@@ -13,6 +13,7 @@
 | 原則 | 内容 |
 |------|------|
 | 階層型メモリ | 常時ロードするコア記憶と必要時のみ取得する補助記憶を分離する |
+| 構造化圧縮 | 会話ログを曖昧な自然文のまま保持せず、検索可能な atomic facts に正規化する |
 | 蒸留パイプライン | エピソード記憶を要約・統合して再利用知識へ昇格させる |
 | スマート検索と競合解決 | Hybrid Retrieval と再ランキングで関連度を高める |
 
@@ -42,6 +43,8 @@ memory/
 - Tier-1 Core: 常時確保
 - Tier-2 / Tier-3: 関連度上位のみ取得
 - 総メモリロード量がコンテキストウィンドウの 20% を超える場合は Tier-3 を削減
+- クエリ複雑度に応じて取得深度を可変化（低複雑度は shallow, 高複雑度は deep）
+- コンテキスト投入は Full / Summary / Reference の3段階ティアで制御する
 
 ## 6. イベント層
 
@@ -77,6 +80,11 @@ e = (timestamp, type, source, payload, ref)
 - 生成知識を既存 Tier-2 と比較し、マージまたは追加
 - 蒸留済み episodes を archive へ移動
 
+### 7.2.1 階層要約（追加）
+- 月次要約: 期間単位の中期記憶を生成し、時系列の連続性を維持する
+- グローバル要約: 月次要約を統合して長期記憶を再構成する
+- 推論時は「グローバル要約 + 直近エピソード + 関連検索結果」を基本投入セットとする
+
 ### 7.3 TTL と削除
 - episodes: 30日後に archive 化
 - archive: 既定 90 日以上保持
@@ -86,6 +94,11 @@ e = (timestamp, type, source, payload, ref)
 1. 新しいタイムスタンプ優先
 2. より具体的なエントリ優先
 3. 解決不能なら conflict=true で保持
+
+### 7.5 信頼度と来歴（追加）
+- 各メモリエントリに confidence と provenance（source, timestamp, derivation）を保持する
+- 派生要約は derives_from を記録し、逆参照可能にする
+- ユーザー明示修正は自動推論より優先し、強制反映する
 
 ## 8. 検索戦略
 
@@ -99,6 +112,17 @@ e = (timestamp, type, source, payload, ref)
 - recency_score
 - access_score
 - combined_score = 0.5 x relevance + 0.3 x recency + 0.2 x access
+
+### 8.3 Complexity-aware Retrieval（追加）
+- クエリ複雑度 C_q を推定し、取得件数を動的に制御する
+- k_dyn = k_base x (1 + delta x C_q)
+- 低複雑度: lexical/semantic の shallow 検索を優先
+- 高複雑度: graph expansion と長期要約の併用を許可
+
+### 8.4 構造化圧縮（追加）
+- 書き込み時に代名詞解決・相対時刻の絶対化・主体の明確化を行う
+- 非構造文のみを保持せず、検索用に atomic facts を副生成する
+- 生成時の追加コストは「書き込み時の前払い」として扱い、読み取り効率を優先する
 
 ## 9. 主要リスクと対策
 - Risk-M1 蒸留品質依存
@@ -128,3 +152,21 @@ M_{t+1} = f(M_t, e_{t+1})
 - Phase 1 は記録優先であり、最適化や高度な競合解決は受け入れ条件に含めない
 - モデル変更時は revision_needed を立てて段階的に再蒸留する
 - 詳細パラメータは設計レビューと週次ガバナンスで見直す
+- ツール起動率は instruction 本文より tool description の明確さに強く依存するため、description を短く具体的に保つ
+- 記憶系運用の定着には、タスク開始時に読み込みを自動誘導する専用ツールまたはプリセットを用意する
+
+## 12. 改善アクション（2026-04-05 調査反映）
+
+### 12.1 即時反映（Low Risk）
+- state.research_state に memory retrieval report の最終記録項目を追加する
+- memory/index.json に confidence, provenance, derives_from のインデックスキーを追加する
+- retrieval 結果に Full / Summary / Reference 区分を導入する
+
+### 12.2 次スプリント反映（Medium Risk）
+- episodes 生成時の atomic facts 抽出パスを追加する
+- 複雑度推定（C_q）に基づく k_dyn 制御を memory retriever に実装する
+- 月次要約・グローバル要約の2層要約ジョブを distillation worker に追加する
+
+### 12.3 要検証（High Uncertainty）
+- 忘却曲線ベースの decay 係数導入は、既存評価指標（精度・再現率・コスト）で A/B 検証後に採用判定する
+- knowledge graph 連携は保守コストが高いため、まずは derives_from / superseded_by の最小関係から段階導入する

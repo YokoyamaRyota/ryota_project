@@ -72,7 +72,7 @@ const ARTIFACT_GATE_CONFIG = {
     description: 'UAT phase transition gate'
   },
   complete: {
-    required_files: ['memory/episodes/*.md', 'audit_log/events.jsonl'],
+    required_files: ['audit_log/events.jsonl'],
     must_have_fields: [],
     description: 'Task completion gate (episode + audit log)'
   }
@@ -160,19 +160,20 @@ function getFileUpdateTime(file_path) {
  * @param {string} decision_id - 意思決定 ID（タイムスタンプベース）
  * @returns {boolean}
  */
-function isFileUpdatedAfterDecision(file_path, decision_id) {
-  // decision_id は ISO 8601 タイムスタンプ形式を想定
-  // 例: 2026-04-05T10:30:00Z
-  try {
-    const decision_time = new Date(decision_id).getTime();
-    const file_time = getFileUpdateTime(file_path);
+function isFileUpdatedAfterDecision(file_path, decision_time_ms) {
+  const file_time = getFileUpdateTime(file_path);
+  if (file_time === null) return false;
+  return file_time >= decision_time_ms - 5000; // 5 秒の猶予
+}
 
-    if (file_time === null) return false;
-    return file_time >= decision_time - 5000; // 5 秒の猶予
-  } catch (e) {
-    console.warn(`Failed to parse decision_id as timestamp: ${decision_id}`);
-    return true; // リスク回避：タイムスタンプ解析失敗時は通す
-  }
+function parseDecisionTimestampToMs(decision_timestamp) {
+  if (!decision_timestamp) return null;
+  const parsed = new Date(decision_timestamp).getTime();
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getExpectedEpisodePath(task_id) {
+  return task_id ? `memory/episodes/${task_id}.md` : null;
 }
 
 /**
@@ -246,7 +247,7 @@ function checkMustHaveFields(file_path, must_have_fields) {
  * @returns {Object} { approval: boolean, denial_code, issues }
  */
 function checkArtifactGate(params) {
-  const { next_phase, decision_id } = params;
+  const { next_phase, decision_id, decision_timestamp, task_id } = params;
 
   if (!next_phase) {
     return {
@@ -276,12 +277,29 @@ function checkArtifactGate(params) {
     }
   }
 
-  // ルール 2: 更新時刻確認（decision_id がある場合）
-  if (decision_id) {
+  // ルール 2: 更新時刻確認（decision_timestamp がある場合）
+  const decision_time_ms = parseDecisionTimestampToMs(decision_timestamp);
+  if (decision_timestamp && decision_time_ms === null) {
+    issues.push(`DECISION_TIMESTAMP_INVALID: ${decision_timestamp}`);
+  }
+
+  if (decision_time_ms !== null) {
     for (const file of gate_config.required_files) {
-      if (fileExists(file) && !isFileUpdatedAfterDecision(file, decision_id)) {
-        issues.push(`ARTIFACT_NOT_UPDATED: ${file} (decision_id: ${decision_id})`);
+      if (fileExists(file) && !isFileUpdatedAfterDecision(file, decision_time_ms)) {
+        issues.push(`ARTIFACT_NOT_UPDATED: ${file} (decision_timestamp: ${decision_timestamp})`);
       }
+    }
+  } else if (decision_id) {
+    issues.push('DECISION_TIMESTAMP_MISSING: decision_id provided without valid decision_timestamp');
+  }
+
+  // complete は task_id 固有の episode ファイルを必須化する。
+  if (next_phase === 'complete') {
+    const expected_episode = getExpectedEpisodePath(task_id);
+    if (!expected_episode) {
+      issues.push('TASK_ID_MISSING: complete gate requires task_id');
+    } else if (!fileExists(expected_episode)) {
+      issues.push(`EPISODE_NOT_FOUND: ${expected_episode}`);
     }
   }
 
@@ -326,8 +344,10 @@ module.exports = {
   getExistingFiles,
   getFileUpdateTime,
   isFileUpdatedAfterDecision,
+  parseDecisionTimestampToMs,
   extractSyncStatus,
   checkMustHaveFields,
+  getExpectedEpisodePath,
   ARTIFACT_GATE_CONFIG
 };
 

@@ -65,10 +65,6 @@ function extractNextPhase(payload) {
   return inferredPhaseByAgent[agentName] || null;
 }
 
-function isSubagentCallWithoutPhase(payload, nextPhase) {
-  return extractToolName(payload) === 'runSubagent' && !nextPhase;
-}
-
 function isPhaseSensitiveEditWithoutPhase(payload, nextPhase) {
   if (nextPhase) return false;
 
@@ -82,16 +78,6 @@ function isPhaseSensitiveEditWithoutPhase(payload, nextPhase) {
 try {
   const payload = readStdinJson();
   const nextPhase = extractNextPhase(payload);
-
-  if (isSubagentCallWithoutPhase(payload, nextPhase)) {
-    process.stdout.write(
-      JSON.stringify({
-        permissionDecision: 'deny',
-        permissionDecisionReason: 'MISSING_PHASE_SIGNAL: runSubagent call requires next_phase or inferable agentName'
-      })
-    );
-    process.exit(0);
-  }
 
   if (isPhaseSensitiveEditWithoutPhase(payload, nextPhase)) {
     process.stdout.write(

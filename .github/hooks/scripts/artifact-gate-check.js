@@ -80,10 +80,6 @@ function extractNextPhase(payload, state) {
   return null;
 }
 
-function isSubagentCallWithoutPhase(payload, nextPhase) {
-  return extractToolName(payload) === 'runSubagent' && !nextPhase;
-}
-
 function isPhaseSensitiveEditWithoutPhase(payload, nextPhase) {
   if (nextPhase) return false;
 
@@ -94,8 +90,8 @@ function isPhaseSensitiveEditWithoutPhase(payload, nextPhase) {
   return touchesPhaseArtifacts(payload);
 }
 
-function extractDecisionId(payload, state) {
-  return (
+function extractDecisionContext(payload, state) {
+  const decisionId = (
     payload?.tool_input?.decision_id ||
     payload?.toolInput?.decision_id ||
     payload?.decision_id ||
@@ -103,21 +99,27 @@ function extractDecisionId(payload, state) {
     state?.task_contract?.decision_id ||
     null
   );
+
+  const decisionTimestamp = (
+    payload?.tool_input?.decision_timestamp ||
+    payload?.toolInput?.decision_timestamp ||
+    payload?.decision_timestamp ||
+    state?.current_workflow?.decision_started_at ||
+    null
+  );
+
+  return {
+    decisionId,
+    decisionTimestamp,
+    taskId: state?.task_contract?.task_id || payload?.task_id || null
+  };
 }
 
 try {
   const payload = readStdinJson();
   const state = loadState();
   const nextPhase = extractNextPhase(payload, state);
-  const decisionId = extractDecisionId(payload, state);
-
-  if (isSubagentCallWithoutPhase(payload, nextPhase)) {
-    process.stdout.write(JSON.stringify({
-      permissionDecision: 'deny',
-      permissionDecisionReason: 'MISSING_PHASE_SIGNAL: runSubagent call requires next_phase or inferable agentName'
-    }));
-    process.exit(0);
-  }
+  const decision = extractDecisionContext(payload, state);
 
   if (isPhaseSensitiveEditWithoutPhase(payload, nextPhase)) {
     process.stdout.write(JSON.stringify({
@@ -132,7 +134,12 @@ try {
     process.exit(0);
   }
 
-  const result = gate.checkArtifactGate({ next_phase: nextPhase, decision_id: decisionId });
+  const result = gate.checkArtifactGate({
+    next_phase: nextPhase,
+    decision_id: decision.decisionId,
+    decision_timestamp: decision.decisionTimestamp,
+    task_id: decision.taskId
+  });
 
   if (!result.approval) {
     process.stdout.write(JSON.stringify({

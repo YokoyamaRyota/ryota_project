@@ -81,6 +81,12 @@ try {
   const phase = state?.current_workflow?.phase || state?.system_status?.current_phase || null;
   const complexity = state?.task_contract?.complexity_class || null;
 
+  // Phase guard: only fire UAT from deep_review or uat phases
+  const VALID_UAT_PHASES = ['deep_review', 'uat'];
+  if (!VALID_UAT_PHASES.includes(phase)) {
+    process.exit(0);
+  }
+
   // 5-minute duplicate prevention window
   if (hasRecentUatTriggered(taskId, 300000)) {
     process.exit(0);

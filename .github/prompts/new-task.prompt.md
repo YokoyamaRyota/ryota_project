@@ -12,6 +12,7 @@ mode: ask
 - done_criteria
 - out_of_scope
 - acceptance_tests
+- research_requirements
 
 出力形式:
 
@@ -21,6 +22,16 @@ mode: ask
   "constraints": [],
   "done_criteria": [],
   "out_of_scope": [],
-  "acceptance_tests": []
+  "acceptance_tests": [],
+  "research_requirements": {
+    "needs_internal_exploration": false,
+    "needs_primary_source_verification": false,
+    "needs_browser_observation": false,
+    "evidence_requirements": [],
+    "research_goal": "",
+    "scope_boundary": "",
+    "acceptance_checks": [],
+    "stop_conditions": []
+  }
 }
 ```

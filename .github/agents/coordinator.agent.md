@@ -27,6 +27,8 @@ agents:
   - Feasibility Review
   - Flow Review
   - Scope Review
+  - explorer
+  - docs-researcher
 handoffs:
   - label: "Task completion and governance review"
     agent: coordinator
@@ -129,6 +131,35 @@ Episode Writer（記憶記録）
   ↓
 タスク完了
 ```
+
+### 4.1.1 調査タスクの委譲ルール（調査のシステム化）
+
+**目的**: 「実装」だけでなく「必要情報の調査」も再現可能な手順で実行する。
+
+**判定トリガー**:
+- ユーザー要求に「調査」「比較」「一次情報」「最新仕様」「公式ドキュメント」が含まれる
+- ローカルコードと既存成果物だけでは判断根拠が不足する
+- UI/挙動確認でブラウザ観測が必要（画面遷移、DOM、実表示）
+
+**判定アルゴリズム（実行必須）**:
+- Step 1: `needs_internal_exploration` を判定（コード参照の根拠が必要なら true）
+- Step 2: `needs_primary_source_verification` を判定（仕様や最新情報の裏取りが必要なら true）
+- Step 3: `needs_browser_observation` を判定（UI 実挙動の確認が acceptance_tests に含まれるなら true）
+- Step 4: 3 つのいずれかが true なら調査フェーズを実行してから実装/レビューへ進む
+
+**委譲先ルーティング**:
+- コードベース内の事実収集のみ: `explorer`
+- 公式仕様・外部一次情報の確認: `docs-researcher`
+- ブラウザ観測が必要な QA/検証: `qa-browser` スキルを先に適用し、ブラウザ機能が有効なら実行
+
+**実行ガード**:
+- research/browser 系は opt-in の原則を維持する
+- 外部調査を開始する前に、タスク契約へ「調査目的・範囲・成功条件」を記録する
+- 調査結果は根拠ソースと確度を必ず返却し、未確認事項を明示する
+
+**ブラウザ要否が true の場合の動作**:
+- ブラウザ機能が有効: ブラウザ観測を実行し、再現手順・観測結果・証跡を記録
+- ブラウザ機能が無効: `docs-researcher` + `explorer` で代替調査を実施し、`browser_unavailable` を明示して conditional 扱いで返却
 
 ### 4.2 工程遷移ルール（FR-13d 実装）
 

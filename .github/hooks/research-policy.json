@@ -1,0 +1,21 @@
+﻿{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "type": "command",
+        "command": "node .github/hooks/scripts/research-policy-check.js",
+        "windows": "powershell -NoProfile -ExecutionPolicy Bypass -File .github/hooks/scripts/run-node-hook.ps1 -Script .github/hooks/scripts/research-policy-check.js -FallbackMode context",
+        "timeout": 5
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node .github/hooks/scripts/research-policy-check.js",
+        "windows": "powershell -NoProfile -ExecutionPolicy Bypass -File .github/hooks/scripts/run-node-hook.ps1 -Script .github/hooks/scripts/research-policy-check.js -FallbackMode context",
+        "timeout": 5
+      }
+    ]
+  }
+}
+

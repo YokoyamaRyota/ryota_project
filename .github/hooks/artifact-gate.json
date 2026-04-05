@@ -1,12 +1,14 @@
-{
+﻿{
   "hooks": {
     "PreToolUse": [
       {
         "type": "command",
         "command": "node .github/hooks/scripts/artifact-gate-check.js",
-        "windows": "powershell -NoProfile -ExecutionPolicy Bypass -File .github/hooks/scripts/run-node-hook.ps1 -Script .github/hooks/scripts/artifact-gate-check.js -FallbackMode allow",
+        "windows": "powershell -NoProfile -ExecutionPolicy Bypass -File .github/hooks/scripts/run-node-hook.ps1 -Script .github/hooks/scripts/artifact-gate-check.js -FallbackMode deny",
         "timeout": 10
       }
     ]
   }
 }
+
+
