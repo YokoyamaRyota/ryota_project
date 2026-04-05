@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node .github/hooks/scripts/check-episode-trigger.js",
+        "windows": "powershell -NoProfile -ExecutionPolicy Bypass -File .github/hooks/scripts/run-node-hook.ps1 -Script .github/hooks/scripts/check-episode-trigger.js -FallbackMode silent",
+        "timeout": 10
+      }
+    ]
+  }
+}

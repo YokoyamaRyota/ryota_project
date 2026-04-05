@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "supportedTargets": ["copilot"],
+  "componentFamilies": [
+    "baseline",
+    "workflow",
+    "capability",
+    "agent",
+    "target"
+  ],
+  "components": [
+    {
+      "id": "baseline:skills",
+      "family": "baseline",
+      "description": "Core workflow and knowledge skills as installable content.",
+      "targets": ["copilot"],
+      "modules": ["module:skills-core-generated", "module:skills-knowledge-generated"],
+      "riskLevel": "low",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Generated target skill payloads are rebuilt from authored source skills."
+    },
+    {
+      "id": "baseline:copilot",
+      "family": "baseline",
+      "description": "GitHub Copilot workspace baseline with instructions, prompts, and custom agents.",
+      "targets": ["copilot"],
+      "modules": ["module:copilot-baseline", "module:copilot-agent-roles"],
+      "riskLevel": "low",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Workspace instruction, prompt, and custom agent files are copied as authored assets."
+    },
+    {
+      "id": "workflow:investigate",
+      "family": "workflow",
+      "description": "Root-cause-first debugging and investigation workflow.",
+      "targets": ["copilot"],
+      "modules": ["module:skills-core-generated"],
+      "riskLevel": "low",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Selected skill artifacts are generated into target-specific skill directories."
+    },
+    {
+      "id": "workflow:review",
+      "family": "workflow",
+      "description": "Findings-first review workflow for correctness and regression risk.",
+      "targets": ["copilot"],
+      "modules": ["module:skills-core-generated"],
+      "riskLevel": "low",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Selected skill artifacts are generated into target-specific skill directories."
+    },
+    {
+      "id": "workflow:qa",
+      "family": "workflow",
+      "description": "Browser QA and report-only versus fix-capable testing workflows.",
+      "targets": ["copilot"],
+      "modules": ["module:skills-core-generated"],
+      "riskLevel": "medium",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Selected skill artifacts are generated into target-specific skill directories."
+    },
+    {
+      "id": "workflow:ship-release",
+      "family": "workflow",
+      "description": "Release preparation workflow that keeps review and verification explicit.",
+      "targets": ["copilot"],
+      "modules": ["module:skills-core-generated"],
+      "riskLevel": "medium",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Selected skill artifacts are generated into target-specific skill directories."
+    },
+    {
+      "id": "workflow:safety",
+      "family": "workflow",
+      "description": "Guarded workflows for destructive actions, freeze, careful, and checkpoint flows.",
+      "targets": ["copilot"],
+      "modules": ["module:skills-core-generated"],
+      "riskLevel": "low",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Selected skill artifacts are generated into target-specific skill directories."
+    },
+    {
+      "id": "capability:engineering",
+      "family": "capability",
+      "description": "Engineering knowledge packs such as coding standards, backend patterns, API design, and verification.",
+      "targets": ["copilot"],
+      "modules": ["module:skills-knowledge-generated"],
+      "riskLevel": "low",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Generated skill payloads may be rebuilt from source skills."
+    },
+    {
+      "id": "capability:security",
+      "family": "capability",
+      "description": "Security review, guarded defaults, and secure validation capabilities.",
+      "targets": ["copilot"],
+      "modules": ["module:skills-core-generated"],
+      "riskLevel": "medium",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Security skill payloads are generated as workspace skills."
+    },
+    {
+      "id": "capability:research",
+      "family": "capability",
+      "description": "Research-oriented skills for documentation lookup and external investigation.",
+      "targets": ["copilot"],
+      "modules": ["module:skills-knowledge-generated"],
+      "riskLevel": "medium",
+      "requiresExplicitOptIn": true,
+      "generatedSemantics": "Research skills are generated, but external web or MCP use stays opt-in."
+    },
+    {
+      "id": "agent:reviewer",
+      "family": "agent",
+      "description": "Review-only custom agent for correctness and security review.",
+      "targets": ["copilot"],
+      "modules": ["module:copilot-agent-roles"],
+      "riskLevel": "low",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Custom agent files are copied as authored workspace assets."
+    },
+    {
+      "id": "agent:explorer",
+      "family": "agent",
+      "description": "Read-focused custom agent for evidence gathering.",
+      "targets": ["copilot"],
+      "modules": ["module:copilot-agent-roles"],
+      "riskLevel": "low",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Custom agent files are copied as authored workspace assets."
+    },
+    {
+      "id": "agent:docs-researcher",
+      "family": "agent",
+      "description": "Documentation-focused custom agent for primary-source verification.",
+      "targets": ["copilot"],
+      "modules": ["module:copilot-agent-roles"],
+      "riskLevel": "medium",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Custom agent files are copied as authored workspace assets."
+    },
+    {
+      "id": "target:copilot",
+      "family": "target",
+      "description": "GitHub Copilot target adapter, workspace customizations, and state management.",
+      "targets": ["copilot"],
+      "modules": ["module:target-copilot-adapter", "module:install-state"],
+      "riskLevel": "low",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Workspace customization files and install state are rebuildable."
+    },
+    {
+      "id": "workflow:agent-system",
+      "family": "workflow",
+      "description": "Multi-agent workflow system: coordinator, planner, implementer, review gates, episode writer, memory retriever, governance, and hooks.",
+      "targets": ["copilot"],
+      "modules": [
+        "module:agent-system-agents",
+        "module:agent-system-hooks",
+        "module:agent-system-plugins"
+      ],
+      "riskLevel": "low",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Agent, hook, and plugin files are authored assets copied directly into .github/."
+    },
+    {
+      "id": "capability:agent-workflow-skills",
+      "family": "capability",
+      "description": "Skills supporting the agent workflow: baseline-metrics collection and memory distillation.",
+      "targets": ["copilot"],
+      "modules": ["module:agent-system-skills"],
+      "riskLevel": "low",
+      "requiresExplicitOptIn": false,
+      "generatedSemantics": "Skill files are copied as authored assets into .github/skills/."
+    }
+  ]
+}

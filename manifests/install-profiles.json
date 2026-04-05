@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "profiles": [
+    {
+      "id": "copilot",
+      "description": "VS Code GitHub Copilot workspace baseline with shared skills, custom agents, prompts, instructions, and multi-agent workflow system.",
+      "components": [
+        "baseline:skills",
+        "baseline:copilot",
+        "workflow:investigate",
+        "workflow:review",
+        "workflow:safety",
+        "capability:engineering",
+        "capability:security",
+        "workflow:agent-system",
+        "capability:agent-workflow-skills"
+      ],
+      "notes": [
+        "Best default for VS Code GitHub Copilot workspace installs.",
+        "Includes the multi-agent workflow system (Coordinator, Planner, hooks, etc.).",
+        "Research-oriented expansions remain opt-in via additional components."
+      ]
+    },
+    {
+      "id": "core",
+      "description": "Minimal safe workflow baseline for supported targets.",
+      "components": [
+        "baseline:skills",
+        "workflow:investigate",
+        "workflow:review",
+        "workflow:safety"
+      ],
+      "notes": [
+        "Use this when you want only shared skills and the target adapter.",
+        "Host-specific prompts and agents are not included unless the target profile adds them."
+      ]
+    },
+    {
+      "id": "research",
+      "description": "Copilot baseline plus research-oriented knowledge packs and the docs researcher agent.",
+      "components": [
+        "baseline:skills",
+        "baseline:copilot",
+        "workflow:investigate",
+        "workflow:review",
+        "workflow:safety",
+        "capability:engineering",
+        "capability:research",
+        "agent:docs-researcher"
+      ],
+      "notes": [
+        "Use when primary-source documentation lookup and web-backed research matter.",
+        "External web access remains an explicit runtime choice in VS Code."
+      ]
+    }
+  ]
+}

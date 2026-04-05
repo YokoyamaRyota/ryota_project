@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "updated_at": "2026-04-05T00:00:00Z",
+  "entries": {},
+  "policy": {
+    "tier_1": "core.md",
+    "tier_2": "memory/patterns",
+    "tier_3": "memory/episodes",
+    "tier_4": "memory/archive"
+  }
+}

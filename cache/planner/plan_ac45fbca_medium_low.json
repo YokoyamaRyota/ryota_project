@@ -1,0 +1,68 @@
+{
+  "cache_key": "plan_ac45fbca_medium_low",
+  "semantic_hash": "ac45fbcacbf8c48c7bd98ca590415b12e7199100649f9f2289888ec15a1e7add",
+  "task_contract": {
+    "task_id": "test-002",
+    "source_ur_id": "UR-001",
+    "mapped_br_id": "BR-001",
+    "goal": "Add new feature to system-specification.md",
+    "constraints": [
+      "Must not modify existing FR definitions",
+      "Must maintain backward compatibility",
+      "Must update sync_status field"
+    ],
+    "done_criteria": [
+      "New requirement added to specification",
+      "Artifact-gate validation passed",
+      "Documentation updated"
+    ],
+    "out_of_scope": [
+      "Implementation of the feature",
+      "UAT execution"
+    ],
+    "acceptance_tests": [
+      "AC-01: File syntax validation",
+      "AC-02: Sync status check",
+      "AC-03: Traceability verification"
+    ]
+  },
+  "execution_plan": {
+    "milestones": [
+      {
+        "phase": "M1",
+        "description": "Load file",
+        "estimated_time_seconds": 10
+      },
+      {
+        "phase": "M2",
+        "description": "Modify content",
+        "estimated_time_seconds": 20
+      },
+      {
+        "phase": "M3",
+        "description": "Validate",
+        "estimated_time_seconds": 15
+      },
+      {
+        "phase": "M4",
+        "description": "Save and sync",
+        "estimated_time_seconds": 15
+      }
+    ],
+    "execution_order": [
+      "M1",
+      "M2",
+      "M3",
+      "M4"
+    ],
+    "critical_path_duration": 60,
+    "estimated_tokens": 50
+  },
+  "created_at": "2026-04-05T05:49:41.124Z",
+  "expires_at": "2026-04-06T05:49:41.124Z",
+  "metadata": {
+    "complexity": "medium",
+    "risk_level": "low",
+    "source_task_id": "test-002"
+  }
+}

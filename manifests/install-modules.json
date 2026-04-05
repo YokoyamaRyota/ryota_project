@@ -1,0 +1,241 @@
+{
+  "version": 1,
+  "modules": [
+    {
+      "id": "module:skills-core-generated",
+      "kind": "generated",
+      "description": "Generated skill payloads for the core workflow skills.",
+      "sourcePaths": [
+        "skills/plan-product/**",
+        "skills/plan-architecture/**",
+        "skills/investigate/**",
+        "skills/review/**",
+        "skills/security-review/**",
+        "skills/qa-browser/**",
+        "skills/ship-release/**",
+        "skills/health-check/**",
+        "skills/checkpoint/**",
+        "skills/careful/**",
+        "skills/freeze/**",
+        "skills/guard/**"
+      ],
+      "generatedBy": "scripts/build-copilot-skills.js",
+      "generatedPaths": [".github/skills/**"],
+      "riskLevel": "low",
+      "requiresSecrets": false,
+      "targets": {
+        "copilot": {
+          "status": "full",
+          "targetPaths": [".github/skills"],
+          "operations": [
+            {
+              "type": "generate",
+              "generator": "scripts/build-copilot-skills.js",
+              "outputRoot": ".github/skills"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "module:skills-knowledge-generated",
+      "kind": "generated",
+      "description": "Generated skill payloads for engineering and research knowledge packs.",
+      "sourcePaths": [
+        "skills/tdd-workflow/**",
+        "skills/verification-loop/**",
+        "skills/coding-standards/**",
+        "skills/backend-patterns/**",
+        "skills/frontend-patterns/**",
+        "skills/api-design/**",
+        "skills/e2e-testing/**",
+        "skills/documentation-lookup/**",
+        "skills/deep-research/**",
+        "skills/exa-search/**",
+        "skills/dmux-workflows/**",
+        "skills/mcp-server-patterns/**"
+      ],
+      "generatedBy": "scripts/build-copilot-skills.js",
+      "generatedPaths": [".github/skills/**"],
+      "riskLevel": "low",
+      "requiresSecrets": false,
+      "targets": {
+        "copilot": {
+          "status": "full",
+          "targetPaths": [".github/skills"],
+          "operations": [
+            {
+              "type": "generate",
+              "generator": "scripts/build-copilot-skills.js",
+              "outputRoot": ".github/skills"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "module:copilot-baseline",
+      "kind": "authored",
+      "description": "GitHub Copilot workspace instructions, prompts, and file-based instructions.",
+      "sourcePaths": [
+        "plugins/copilot/templates/copilot-instructions.md",
+        ".github/instructions/**",
+        ".github/prompts/**"
+      ],
+      "generatedPaths": [],
+      "riskLevel": "low",
+      "requiresSecrets": false,
+      "targets": {
+        "copilot": {
+          "status": "full",
+          "targetPaths": [".github/copilot-instructions.md", ".github/instructions", ".github/prompts"],
+          "operations": [
+            { "type": "copy", "from": "plugins/copilot/templates/copilot-instructions.md", "to": ".github/copilot-instructions.md" },
+            { "type": "copy", "from": ".github/instructions", "to": ".github/instructions" },
+            { "type": "copy", "from": ".github/prompts", "to": ".github/prompts" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "module:copilot-agent-roles",
+      "kind": "authored",
+      "description": "GitHub Copilot custom agent definitions for exploration, review, and docs verification.",
+      "sourcePaths": ["plugins/copilot/templates/agents/**"],
+      "generatedPaths": [],
+      "riskLevel": "low",
+      "requiresSecrets": false,
+      "targets": {
+        "copilot": {
+          "status": "full",
+          "targetPaths": [".github/agents"],
+          "operations": [
+            { "type": "copy", "from": "plugins/copilot/templates/agents", "to": ".github/agents" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "module:agent-system-agents",
+      "kind": "authored",
+      "description": "Multi-agent workflow agent definitions: Coordinator, Planner, Implementer, Fast Gate, Deep Review, Episode Writer, Memory Retriever, Governance, UAT Runner, Decision Gate, and supporting agents.",
+      "sourcePaths": [".github/agents/**"],
+      "generatedPaths": [],
+      "riskLevel": "low",
+      "requiresSecrets": false,
+      "targets": {
+        "copilot": {
+          "status": "full",
+          "targetPaths": [".github/agents"],
+          "operations": [
+            { "type": "copy", "from": ".github/agents", "to": ".github/agents" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "module:agent-system-hooks",
+      "kind": "authored",
+      "description": "Lifecycle hooks for artifact gating, audit logging, cost guard, governance gate, phase transition guard, and UAT trigger.",
+      "sourcePaths": [".github/hooks/**"],
+      "generatedPaths": [],
+      "riskLevel": "low",
+      "requiresSecrets": false,
+      "targets": {
+        "copilot": {
+          "status": "full",
+          "targetPaths": [".github/hooks"],
+          "operations": [
+            { "type": "copy", "from": ".github/hooks", "to": ".github/hooks" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "module:agent-system-plugins",
+      "kind": "authored",
+      "description": "Runtime plugins: tiered memory retriever, planner cache manager, and semantic hash generator.",
+      "sourcePaths": [".github/plugins/**"],
+      "generatedPaths": [],
+      "riskLevel": "low",
+      "requiresSecrets": false,
+      "targets": {
+        "copilot": {
+          "status": "full",
+          "targetPaths": [".github/plugins"],
+          "operations": [
+            { "type": "copy", "from": ".github/plugins", "to": ".github/plugins" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "module:agent-system-skills",
+      "kind": "authored",
+      "description": "Skills for baseline metrics collection and memory distillation.",
+      "sourcePaths": [
+        "skills/baseline-metrics/**",
+        "skills/memory-distillation/**"
+      ],
+      "generatedPaths": [],
+      "riskLevel": "low",
+      "requiresSecrets": false,
+      "targets": {
+        "copilot": {
+          "status": "full",
+          "targetPaths": [".github/skills/baseline-metrics", ".github/skills/memory-distillation"],
+          "operations": [
+            { "type": "copy", "from": ".github/skills/baseline-metrics", "to": ".github/skills/baseline-metrics" },
+            { "type": "copy", "from": ".github/skills/memory-distillation", "to": ".github/skills/memory-distillation" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "module:target-copilot-adapter",
+      "kind": "generated",
+      "description": "GitHub Copilot target-specific install metadata and state layout.",
+      "sourcePaths": [
+        "manifests/install-components.json",
+        "manifests/install-profiles.json",
+        "manifests/install-modules.json"
+      ],
+      "generatedBy": "scripts/install-apply.mjs",
+      "generatedPaths": [".super-skills/targets/copilot.json"],
+      "riskLevel": "low",
+      "requiresSecrets": false,
+      "targets": {
+        "copilot": {
+          "status": "full",
+          "targetPaths": [".super-skills/targets/copilot.json"],
+          "operations": [
+            { "type": "generate", "generator": "scripts/install-apply.mjs", "outputRoot": ".super-skills/targets" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "module:install-state",
+      "kind": "generated",
+      "description": "Installer state tracking written after apply.",
+      "sourcePaths": [
+        "manifests/install-components.json",
+        "manifests/install-profiles.json",
+        "manifests/install-modules.json"
+      ],
+      "generatedBy": "scripts/install-apply.mjs",
+      "generatedPaths": [".super-skills/install-state/*.json"],
+      "riskLevel": "low",
+      "requiresSecrets": false,
+      "targets": {
+        "copilot": {
+          "status": "full",
+          "targetPaths": [".super-skills/install-state/copilot.json"],
+          "operations": [
+            { "type": "write-state", "to": ".super-skills/install-state/copilot.json" }
+          ]
+        }
+      }
+    }
+  ]
+}

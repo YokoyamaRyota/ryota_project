@@ -1,0 +1,75 @@
+{
+  "timestamp": "2026-04-05T04:48:35.696Z",
+  "execution": {
+    "status": "completed",
+    "node": "v24.14.1",
+    "command": "node .github/hooks/governance-integration-test.js"
+  },
+  "result": {
+    "status": "passed",
+    "total_tests": 10,
+    "passed": 10,
+    "failed": 0
+  },
+  "tests": [
+    {
+      "label": "Approved path status",
+      "ok": true
+    },
+    {
+      "label": "Approved path deny_code",
+      "ok": true
+    },
+    {
+      "label": "Phase fail status",
+      "ok": true
+    },
+    {
+      "label": "Phase fail priority deny_code",
+      "ok": true
+    },
+    {
+      "label": "Change request fail status",
+      "ok": true
+    },
+    {
+      "label": "Change request fail priority deny_code",
+      "ok": true
+    },
+    {
+      "label": "Traceability fail status",
+      "ok": true
+    },
+    {
+      "label": "Traceability fail deny_code",
+      "ok": true
+    },
+    {
+      "label": "Duplicate first evaluation status",
+      "ok": true
+    },
+    {
+      "label": "Duplicate second evaluation uses cache",
+      "ok": true
+    }
+  ],
+  "coverage_check": {
+    "implemented_cases": [
+      "approved_path",
+      "phase_fail_priority",
+      "change_request_unapproved_priority",
+      "traceability_missing",
+      "duplicate_prevention"
+    ],
+    "deny_codes": [
+      "PHASE_GATE_FAIL",
+      "CHANGE_UNAPPROVED",
+      "TRACEABILITY_MISSING"
+    ],
+    "rule_order": [
+      "phase",
+      "change_request",
+      "traceability"
+    ]
+  }
+}

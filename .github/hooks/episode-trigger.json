@@ -1,0 +1,54 @@
+{
+  "hook_name": "episode-trigger",
+  "trigger": "PreToolUse",
+  "timing": "Episode Writer が episodes/ へ記録を試みた直前",
+  "description": "エピソード記録の前提条件を検査（FR-15）。hard_drift > 0 / 出戻り状態 / stale 成果物の場合、記録ブロック",
+  "validation_rules": [
+    {
+      "priority": 1,
+      "rule": "HARD_DRIFT_CHECK",
+      "check": "episode.hard_drift_count == 0",
+      "logic": "hard_drift が 1 件以上ある場合、記録不可。ユーザー手動介入で drift 解消後のみ再試行",
+      "deny_code": "EPISODE_HARD_DRIFT_UNRESOLVED"
+    },
+    {
+      "priority": 2,
+      "rule": "ROLLBACK_STATUS_CHECK",
+      "check": "current_task.rollback_count <= 0",
+      "logic": "出戻り後のタスクは hard_drift 再検査を必須化。出戻り直後は手動 episode 記録を禁止",
+      "deny_code": "EPISODE_ROLLBACK_PENDING_VERIFICATION"
+    },
+    {
+      "priority": 3,
+      "rule": "ARTIFACT_FRESHNESS",
+      "check": "review_report.update_time <= current_time - 300 (seconds)",
+      "logic": "review-report が 5 分以上前に記録されている場合（stale）、再実行を指示。陳腐化した成果物での episode 記録を避ける",
+      "deny_code": "EPISODE_ARTIFACT_STALE"
+    }
+  ],
+  "deny_codes": {
+    "EPISODE_HARD_DRIFT_UNRESOLVED": "hard_drift が未解消。Episode Writer はユーザーに drift 해소を依頼し、再試行を待機",
+    "EPISODE_ROLLBACK_PENDING_VERIFICATION": "出戻り後のタスク。hard_drift 再検査を必須化。手動 episode 記録を一時ブロック",
+    "EPISODE_ARTIFACT_STALE": "review-report が 5 分以上前。再実行を実施後、episode 記録を実行"
+  },
+  "action": {
+    "on_deny": "episode_writer に deny_code を通知。record 処理をスキップ。audit_log に EPISODE_RECORD_BLOCKED イベント を記録",
+    "on_approve": "episode_writer が episodes/<task_id>.md を記録開始。各セクション（contract/classification/adoption_plan/drift_correction/review_results/learning）を追加"
+  },
+  "event_injection": {
+    "event_type": "EPISODE_RECORD_BLOCKED | EPISODE_RECORD_APPROVED",
+    "fields": [
+      "event_id",
+      "timestamp",
+      "task_id",
+      "deny_code",
+      "reason"
+    ]
+  },
+  "notes": [
+    "episode-trigger は phase 1 week 3 から有効化",
+    "hard_drift ブロックは手動介入が必須。自動リトライは不可",
+    "rollback_count > 0 は Week 1-2 では発生しないが、Phase 2 で重要制御",
+    "artifact 鮮度チェックは review_report.update_time を参照。update されない場合は stale と判定"
+  ]
+}
