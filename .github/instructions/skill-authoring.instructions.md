@@ -1,12 +1,12 @@
 ---
 name: Skill Authoring Rules
 description: Use when editing skill definitions or adding new skills to this repository.
-applyTo: skills/**/SKILL.md
+applyTo: copilot-system/src/skills/**/SKILL.md
 ---
 
 # Skill Authoring Rules
 
-- Keep `skills/` host-neutral and portable.
+- Keep `copilot-system/src/skills/` host-neutral and portable.
 - Use only source-skill frontmatter that is valid for Agent Skills: `name`, `description`, and optional `license` or `compatibility`.
 - Make the description trigger-oriented and include concrete `Use when ...` or `Use for ...` phrasing.
 - Keep detailed examples or large reference material in sibling files instead of bloating `SKILL.md`.

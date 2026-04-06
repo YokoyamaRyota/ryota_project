@@ -4,17 +4,20 @@
   "version": "0.1.0",
   "description": "Unified workflow-first, Codex-first skill system derived from gstack and ECC.",
   "scripts": {
-    "build:copilot-skills": "node scripts/build-copilot-skills.js",
-    "build:mcp-config": "node scripts/build-mcp-config.js",
-    "scan:secrets": "node scripts/scan-secrets.js",
-    "validate:configs": "node scripts/validate-configs.js",
-    "validate:skills": "node scripts/validate-skills.js",
-    "validate:mcp": "node scripts/build-mcp-config.js --validate",
-    "install:plan": "node scripts/install-plan.mjs",
-    "install:apply": "node scripts/install-apply.mjs",
-    "install:validate": "node scripts/install-validate.mjs",
-    "install:list": "node scripts/list-installables.mjs",
-    "check": "node scripts/validate-skills.js && node scripts/build-copilot-skills.js && node scripts/build-mcp-config.js --validate && node scripts/validate-configs.js && node scripts/scan-secrets.js"
+    "build:copilot-skills": "node copilot-system/src/scripts/build-copilot-skills.js",
+    "scan:secrets": "node copilot-system/src/scripts/scan-secrets.js",
+    "validate:configs": "node copilot-system/src/scripts/validate-configs.js",
+    "validate:configs:dry-run": "node copilot-system/src/scripts/validate-configs.js --mode=dry-run",
+    "validate:configs:warn": "node copilot-system/src/scripts/validate-configs.js --mode=warn",
+    "validate:configs:enforce": "node copilot-system/src/scripts/validate-configs.js --mode=enforce",
+    "validate:skills": "node copilot-system/src/scripts/validate-skills.js",
+    "check:docs-stale": "node copilot-system/src/scripts/check-docs-stale.js",
+    "check:docs-stale:audit": "node copilot-system/src/scripts/check-docs-stale.js --write-audit",
+    "memory:normalize": "node copilot-system/src/scripts/memory/normalize-memory.mjs",
+    "memory:index": "node copilot-system/src/scripts/memory/build-memory-index.mjs",
+    "memory:retrieve": "node copilot-system/src/scripts/memory/retrieve-memory.mjs",
+    "memory:consolidate": "node copilot-system/src/scripts/memory/consolidate-memory.mjs",
+    "check": "node copilot-system/src/scripts/validate-skills.js && node copilot-system/src/scripts/build-copilot-skills.js && node copilot-system/src/scripts/validate-configs.js && node copilot-system/src/scripts/scan-secrets.js"
   },
   "engines": {
     "node": ">=18"

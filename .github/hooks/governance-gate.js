@@ -12,10 +12,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const { resolveStateFile, resolveReviewReportFile, resolveWorkspaceRoot } = require('./lib/paths.js');
 
-const ROOT = path.join(__dirname, '..', '..');
-const STATE_FILE = path.join(ROOT, 'state', 'current_task.json');
-const REVIEW_REPORT_FILE = path.join(ROOT, 'review-report.md');
+const ROOT = resolveWorkspaceRoot();
+const STATE_FILE = resolveStateFile('current_task.json');
+const REVIEW_REPORT_FILE = resolveReviewReportFile();
 const DUPLICATE_CACHE_FILE = path.join(__dirname, '.governance-gate-cache.json');
 
 const PHASE_SEQUENCE = [

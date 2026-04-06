@@ -1,9 +1,9 @@
 const path = require('path');
 const fs = require('fs');
 const gate = require(path.join(__dirname, '..', 'artifact-gate.js'));
+const { resolveStateFile } = require(path.join(__dirname, '..', 'lib', 'paths.js'));
 
-const ROOT = path.join(__dirname, '..', '..', '..');
-const STATE_FILE = path.join(ROOT, 'state', 'current_task.json');
+const STATE_FILE = resolveStateFile('current_task.json');
 
 function readStdinJson() {
   try {
@@ -33,7 +33,8 @@ function touchesPhaseArtifacts(payload) {
     'design.md',
     'feature-design.md',
     'review-report.md',
-    'state/current_task.json'
+    'state/current_task.json',
+    'copilot-system/runtime/state/current_task.json'
   ];
 
   return markers.some(marker => serializedInput.includes(marker));

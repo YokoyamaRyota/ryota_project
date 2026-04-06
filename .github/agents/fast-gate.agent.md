@@ -1,6 +1,5 @@
 ---
 name: Fast Gate
-type: agent
 description: "Rapid risk assessment stage (20 seconds). Checks for critical issues and determines if Deep Review is necessary."
 user-invocable: false
 model:

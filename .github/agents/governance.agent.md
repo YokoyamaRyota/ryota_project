@@ -1,6 +1,5 @@
 ---
 name: Governance
-type: agent
 description: "Phase 2 governance enforcement. Manages traceability sync (FR-25) and Change Request processing (FR-27). Integrated governance gate for release control."
 user-invocable: false
 model:

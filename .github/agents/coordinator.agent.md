@@ -1,6 +1,5 @@
 ---
 name: Coordinator
-type: agent
 description: "Orchestrator for the entire VS Code Copilot workflow. Manages phase transitions, enforces work order, confirms artifact updates, and delegates governance tasks."
 user-invocable: true
 model:

@@ -1,6 +1,5 @@
 ---
 name: Request Analyzer
-type: agent
 description: "Analyzes user requirements and classifies them into known_pattern, new_required_capability, or ambiguous_request. Generates normalized task_contract JSON."
 user-invocable: false
 model:

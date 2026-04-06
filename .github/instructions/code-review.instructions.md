@@ -1,6 +1,6 @@
 ---
-description: "Use when: コードレビュー時にプロジェクト固有ルールを直接適用し、外部参照に依存せずに指摘品質を安定させる。"
-applyTo: "**/*"
+description: "Use when: review-report.md を作成・更新するコードレビュー作業。"
+applyTo: "review-report.md"
 ---
 
 # Code Review Direct Rules

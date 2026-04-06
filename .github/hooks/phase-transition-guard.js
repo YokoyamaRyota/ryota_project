@@ -12,8 +12,9 @@
 
 const fs = require('fs');
 const path = require('path');
+const { resolveStateFile } = require('./lib/paths.js');
 
-const CURRENT_TASK_FILE = path.join(__dirname, '..', '..', 'state', 'current_task.json');
+const CURRENT_TASK_FILE = resolveStateFile('current_task.json');
 
 /**
  * 有効な工程遷移マップ

@@ -1,6 +1,5 @@
 ---
 name: Planner
-type: agent
 description: "Decomposes user requirements into implementation steps, defines dependencies and execution order. Supports phase result caching."
 user-invocable: false
 model:

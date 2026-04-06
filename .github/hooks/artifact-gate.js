@@ -13,6 +13,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { resolveWorkspaceRoot } = require('./lib/paths.js');
 
 const ARTIFACT_GATE_CONFIG = {
   requirement_analysis: {
@@ -41,7 +42,7 @@ const ARTIFACT_GATE_CONFIG = {
     description: 'Design phase transition gate (FR-13)'
   },
   planning: {
-    required_files: ['cache/planner/plan_*.json'],
+    required_files: ['copilot-system/runtime/cache/planner/plan_*.json'],
     must_have_fields: [],
     description: 'Planning phase (Planner execution)'
   },
@@ -72,13 +73,13 @@ const ARTIFACT_GATE_CONFIG = {
     description: 'UAT phase transition gate'
   },
   complete: {
-    required_files: ['audit_log/events.jsonl'],
+    required_files: ['copilot-system/runtime/audit_log/events.jsonl'],
     must_have_fields: [],
     description: 'Task completion gate (episode + audit log)'
   }
 };
 
-const WORKSPACE_ROOT = path.join(__dirname, '..', '..');
+const WORKSPACE_ROOT = resolveWorkspaceRoot();
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -173,7 +174,7 @@ function parseDecisionTimestampToMs(decision_timestamp) {
 }
 
 function getExpectedEpisodePath(task_id) {
-  return task_id ? `memory/episodes/${task_id}.md` : null;
+  return task_id ? `copilot-system/runtime/memory/l0/decision-${task_id}.json` : null;
 }
 
 /**

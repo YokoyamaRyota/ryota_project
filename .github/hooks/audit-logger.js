@@ -13,8 +13,9 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { resolveRuntimeDir } = require('./lib/paths.js');
 
-const LOG_DIR = path.join(__dirname, '..', '..', 'audit_log');
+const LOG_DIR = resolveRuntimeDir('audit_log');
 const LOG_FILE = path.join(LOG_DIR, 'events.jsonl');
 const CHECKPOINT_FILE = path.join(LOG_DIR, 'checkpoint.json');
 

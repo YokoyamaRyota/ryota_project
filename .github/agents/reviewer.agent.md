@@ -1,6 +1,5 @@
 ---
 name: reviewer
-type: agent
 description: "Findings-first review agent for correctness, regressions, and security risks."
 user-invocable: false
 model:

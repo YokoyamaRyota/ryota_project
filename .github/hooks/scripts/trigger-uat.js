@@ -1,10 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { resolveStateFile, resolveAuditLogFile, resolveReviewReportFile } = require(path.join(__dirname, '..', 'lib', 'paths.js'));
 
-const reportPath = path.join(__dirname, '..', '..', '..', 'review-report.md');
-const statePath = path.join(__dirname, '..', '..', '..', 'state', 'current_task.json');
-const auditPath = path.join(__dirname, '..', '..', '..', 'audit_log', 'events.jsonl');
+const reportPath = resolveReviewReportFile();
+const statePath = resolveStateFile('current_task.json');
+const auditPath = resolveAuditLogFile('events.jsonl');
 
 function parseApprovalStatus(text) {
   const line = (text.match(/^\s*-\s*判定結果\s*:\s*(.+)$/m) || [])[1];

@@ -1,6 +1,5 @@
 ---
 name: Deep Review
-type: agent
 description: "Detailed review phase (60 seconds). Performs mandatory checks and optional external checks. Determines approval, reject, or conditional approval."
 user-invocable: false
 model:

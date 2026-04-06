@@ -1,6 +1,5 @@
 ---
 name: Scope Review
-type: agent
 description: "Use when reviewing product or system documents for missing capabilities, unnecessary features, scope creep, misplaced detail, and feature prioritization across phases."
 user-invocable: false
 model:

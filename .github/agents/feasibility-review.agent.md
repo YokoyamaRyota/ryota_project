@@ -1,6 +1,5 @@
 ---
 name: Feasibility Review
-type: agent
 description: "Use when reviewing requirement or design documents for implementation feasibility, technical risk, unrealistic assumptions, staged rollout viability, and measurable acceptance criteria."
 user-invocable: false
 model:

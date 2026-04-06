@@ -1,6 +1,5 @@
 ---
 name: Flow Review
-type: agent
 description: "Use when reviewing multi-stage development process documents for lifecycle order, artifact handoff quality, backtracking rules, document consistency, and state-machine alignment."
 user-invocable: false
 model:

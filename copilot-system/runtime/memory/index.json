@@ -1,0 +1,48 @@
+{
+  "version": "2.0",
+  "updated_at": "2026-04-06T14:36:16.442Z",
+  "entries": {
+    "core-l3": {
+      "id": "core-l3",
+      "memory_type": "core",
+      "level": 3,
+      "topics": [
+        "core"
+      ],
+      "summary": "L3 core memory",
+      "rationale": null,
+      "classification": null,
+      "access_count": 0,
+      "last_accessed_at": null,
+      "conflict": false,
+      "superseded_by": null,
+      "retrieval_tier": "summary",
+      "source_file": "memory/core.md",
+      "source_kind": "track_b",
+      "provenance": {
+        "actor": "build-memory-index",
+        "timestamp": null
+      },
+      "derives_from": []
+    }
+  },
+  "entry_template": {
+    "id": "",
+    "memory_type": "decision",
+    "level": 0,
+    "topics": [],
+    "summary": "",
+    "access_count": 0,
+    "last_accessed_at": null,
+    "conflict": false,
+    "retrieval_tier": "summary"
+  },
+  "policy": {
+    "l3": "memory/core.md",
+    "l2": "memory/l2",
+    "l1": "memory/l1",
+    "l0": "memory/l0",
+    "changes": "memory/changes.jsonl",
+    "legacy": "memory/legacy"
+  }
+}

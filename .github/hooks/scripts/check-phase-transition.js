@@ -30,7 +30,8 @@ function touchesPhaseArtifacts(payload) {
     'design.md',
     'feature-design.md',
     'review-report.md',
-    'state/current_task.json'
+    'state/current_task.json',
+    'copilot-system/runtime/state/current_task.json'
   ];
 
   return markers.some(marker => serializedInput.includes(marker));

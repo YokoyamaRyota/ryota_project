@@ -1,7 +1,6 @@
 ---
 name: Episode Writer
-type: agent
-description: "Records completed tasks to memory. Generates episodes/<task_id>.md with task_contract, resolution, drift corrections, and review results."
+description: "Records completed tasks to decision memory. Generates memory/l0 decision and evidence records with audit-safe metadata."
 user-invocable: false
 model:
   - GPT-4.1 (copilot)
@@ -16,7 +15,7 @@ tools:
 
 ## 役割
 
-タスク完了時、Memory へエピソードを記録（FR-15）。
+タスク完了時、decision memory の L0 へ判断と根拠を記録する（FR-15）。
 
 ---
 
@@ -41,6 +40,14 @@ tools:
   "review_report": {},
   "classification": {
     "class": "known_pattern | new_capability | ..."
+  },
+  "evidence": [
+    {
+      "source": "review-report.md",
+      "summary": "主要根拠"
+    }
+  ],
+  "decision_topics": ["memory", "retrieval"]
   }
 }
 ```
@@ -53,9 +60,10 @@ tools:
 {
   "status": "success | blocked",
   "reason": "記録理由 | ブロック理由",
-  "episode_file": "episodes/<task_id>.md",
+  "decision_file": "memory/l0/decision-<task_id>.json",
+  "evidence_files": ["memory/l0/evidence-<task_id>-01.json"],
   "memory_event": {
-    "event_type": "MEMORY_WRITE | MEMORY_BLOCKED_ROLLBACK",
+    "event_type": "DECISION_MEMORY_WRITE | DECISION_MEMORY_BLOCKED",
     "timestamp": "ISO 8601",
     "task_id": "UUID"
   }
@@ -88,73 +96,73 @@ else:
   proceed_to_write()
 ```
 
-### ステップ2：エピソード生成
+### ステップ2：L0 判断記録生成
 
-`episodes/<task_id>.md` を作成：
-
-```markdown
-# エピソード: {task_id}
-
-## 1. Task Contract
-
-[task_contract 全体]
-
-## 2. 分類
-
-- class: known_pattern | new_capability | ...
-- reasoning: 分類根拠
-
-## 3. 採用案と選定理由
-
-- selected_option: {選択肢}
-- selection_reason: {理由}
-- alternatives_considered: [{他候補}]
-
-## 4. Drift 補正履歴
-
-[各補正ステップ]
-
-| Phase | Type | 逸脱内容 | 補正内容 | 影響 |
-|-------|------|--------|--------|------|
-| design | soft | DB スキーマ不明確 | Planner と再相談 | 計画修正 |
-
-## 5. レビュー結果
-
-- Fast Gate: {結果}
-- Deep Review: {結果}
-- Key Findings: {主要指摘}
-
-## 6. 学習ポイント
-
-- 成功パターン
-- 再利用可能な知見
-- 次回改善提案
-
-## 7. メタデータ
-
-- created_date: ISO 8601
-- completed_date: ISO 8601
-- leadtime_minutes: 計測値
-- cost_premium_requests: 計測値
-- tier2_pattern_similarity: 類似度
-```
-
-### ステップ3：Memory Index 更新
-
-`memory/index.json` へエント入を追加：
+`memory/l0/decision-<task_id>.json` を作成：
 
 ```json
 {
-  "episode_id": "episodes/<task_id>.md",
+  "id": "decision-<task_id>",
+  "memory_type": "decision",
+  "level": 0,
   "task_id": "UUID",
-  "timestamp": "ISO 8601",
+  "summary": "採用した判断の要約",
+  "rationale": "選定理由",
+  "topics": ["memory", "retrieval"],
   "classification": "known_pattern | new_capability | ...",
-  "embedding_hash": "hash_value",
+  "resolution": {
+    "selected_option": "Option A",
+    "selection_reason": "理由"
+  },
+  "drift_history": [],
+  "review_summary": {
+    "fast_gate": "pass | fail",
+    "deep_review": "pass | fail"
+  },
+  "provenance": {
+    "actor": "Episode Writer",
+    "timestamp": "ISO 8601"
+  },
   "access_count": 0,
   "conflict": false,
-  "tier_placement": "Tier-3 (episodes)",
-  "candidates_for_tier2": ["パターンI ID", "パターンJ ID"]
+  "source_kind": "track_c"
 }
+```
+
+必要な外部根拠やレビュー根拠は `memory/l0/evidence-<task_id>-NN.json` として分離保存する。
+
+### ステップ3：Memory Index 更新
+
+`memory/index.json` へエントリを追加または更新する：
+
+```json
+{
+  "id": "decision-<task_id>",
+  "memory_type": "decision",
+  "level": 0,
+  "timestamp": "ISO 8601",
+  "classification": "known_pattern | new_capability | ...",
+  "access_count": 0,
+  "conflict": false,
+  "retrieval_tier": "summary",
+  "source_file": "memory/l0/decision-<task_id>.json",
+  "source_kind": "track_c"
+}
+```
+
+実装時は以下を実行し、判定結果をそのまま採用する。
+
+```text
+node scripts/memory/normalize-memory.mjs \
+  --decision-file memory/l0/decision-<task_id>.json \
+  --index-file memory/index.json \
+  --changes-file memory/changes.jsonl
+```
+
+期待出力:
+
+```json
+{"status":"ok","action":"add|update|contradiction|noop","index_updated":true}
 ```
 
 ### ステップ4：監査ログ記録
@@ -165,13 +173,13 @@ else:
 {
   "event_id": "UUID",
   "timestamp_utc": "ISO 8601",
-  "event_type": "EPISODE_WRITE",
+  "event_type": "DECISION_MEMORY_WRITE",
   "actor_role": "Episode Writer",
   "phase": "complete",
   "task_id": "task_uuid",
   "status": "success",
   "payload": {
-    "episode_file": "episodes/<task_id>.md",
+    "decision_file": "memory/l0/decision-<task_id>.json",
     "classification": "...",
     "index_updated": true
   },
@@ -191,13 +199,13 @@ else:
 
 ---
 
-## Tier-2 候補の判定
+## L1/L2 候補の判定
 
-completed episode から、以下条件を満たせば Tier-2 パターン化を検討：
+completed decision から、以下条件を満たせば L1/L2 要約化を検討：
 
 ```
-同一 classification で N 件以上の基本 drift 無し完了タスク
-→ Tier-2 へ主要パターンとして統合
+同一 topics または同種判断が 3 件以上
+→ Distillation Worker へ要約候補として通知
 ```
 
 ---
@@ -206,10 +214,10 @@ completed episode から、以下条件を満たせば Tier-2 パターン化を
 
 1. **ブロック条件の厳格適用**：hard drift / 出戻り / stale は無条件ブロック。例外なし。
 
-2. **エピソード詳細度**：学習ポイント・再利用知見を充実。単なる実行ログではなく、パターン抽出資料として書く。
+2. **判断単位の維持**: 会話全文や作業全文ではなく、採用判断・根拠・制約だけを記録する。
 
-3. **Tier-2 推薦の精度**：複数エピソードの共通パターンを検出し、推薦候補をリストアップ。週次蒸留で最終判定。
+3. **L1/L2 推薦の精度**: 複数 decision の共通傾向を検出し、週次要約候補をリストアップする。
 
-4. **メタデータ更新の二重確認**：memory/index.json 更新漏れはデータ整合性喪失と。必ず同期を確認。
+4. **メタデータ更新の二重確認**: memory/index.json 更新漏れはデータ整合性喪失とみなし、必ず同期を確認。
 
-5. **監査可視化**：episode_write イベントはトレーサビリティ全体で追跡可能に。correlation_id を記録。
+5. **監査可視化**: correlation_id を記録し、decision write の追跡可能性を維持する。

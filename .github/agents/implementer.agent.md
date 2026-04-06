@@ -1,6 +1,5 @@
 ---
 name: Implementer
-type: agent
 description: "Executes implementation steps according to the plan. Manages timeouts (60 seconds) and returns minimal result response on failure."
 user-invocable: false
 model:

@@ -1,6 +1,5 @@
 ---
 name: docs-researcher
-type: agent
 description: "Documentation-focused agent for verifying claims against primary sources."
 user-invocable: false
 model:

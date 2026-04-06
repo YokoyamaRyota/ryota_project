@@ -1,6 +1,5 @@
 ---
 name: UAT Runner
-type: agent
 description: "User acceptance testing phase. Executes Simple/Medium/Complex representative scenarios and records pass/fail/conditional-pass results."
 user-invocable: false
 model:

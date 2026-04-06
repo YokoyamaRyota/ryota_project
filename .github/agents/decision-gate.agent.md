@@ -1,6 +1,5 @@
 ---
 name: Decision Gate
-type: agent
 description: "User decision point management. Presents multiple options with trade-offs and manages SLA (FR-12). Handles 4h reminder and 24h suspended transition."
 user-invocable: false
 model:
